@@ -711,13 +711,13 @@ const CARDS = [
     "AppDelegate vs SceneDelegate: делегат приложения - процесс и системные события (пуш-токен, launch), делегат сцены - жизнь UI-окон и мультиоконность.",
     "Suspended не получает CPU: таймеры и сокеты мертвы; возврат из suspended - willEnterForeground, а после выгрузки - холодный старт.",
     "Сохранение состояния - на didEnterBackground: дальше гарантий нет.",
-    "Мостик к аналитике: батч-отправка на didEnterBackground с beginBackgroundTask - твой же дизайн из задания."
+    "Практический вывод: didEnterBackground - последняя точка, где гарантированно можно что-то сохранить или дослать (черновики, буфер аналитики); долгую работу там оборачивай в beginBackgroundTask, иначе система заморозит процесс раньше."
   ],
-  trap:"Забыть suspended и выгрузку без уведомления - обычный пробел; \"приложение узнает о своей смерти\" - нет, kill из suspended приходит без колбэков." },
+  trap:"Рассчитывать на \"последний колбэк перед смертью\" нельзя: при убийстве приложения из suspended applicationWillTerminate НЕ вызывается, а о выгрузке из памяти система не предупреждает вовсе. Всё важное сохраняй уже в didEnterBackground." },
 
 { id:"u4", topic:"ui",
   q:"Жизненный цикл UIViewController",
-  frame:"loadView (создать view) -> viewDidLoad (один раз, view в памяти, размеров ещё нет) -> viewWillAppear -> viewWillLayoutSubviews / viewDidLayoutSubviews (может звать многократно) -> viewDidAppear -> при уходе willDisappear/didDisappear -> deinit. Размерозависимая настройка - в viewDidLayoutSubviews, подписки экрана - appear/disappear парой.",
+  frame:"По порядку:\n1. loadView - создаётся view.\n2. viewDidLoad - один раз за жизнь контроллера: view в памяти, но размеров ещё нет.\n3. viewWillAppear - перед каждым показом.\n4. viewWillLayoutSubviews / viewDidLayoutSubviews - размеры посчитаны; могут вызываться многократно (поворот, сплит, present).\n5. viewDidAppear - экран виден.\n6. viewWillDisappear / viewDidDisappear - при каждом уходе.\n7. deinit - контроллер умер.\nПравила: размерозависимая настройка - в viewDidLayoutSubviews; подписки экрана - парой appear/disappear.",
   details:[
     "viewDidLoad не знает финальных размеров - классика бага с расчётом фреймов там.",
     "didReceiveMemoryWarning и разгрузка кэшей - старый, но живой вопрос.",
